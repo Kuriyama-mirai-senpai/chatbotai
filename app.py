@@ -653,12 +653,11 @@ def build_final_messages(
 ) -> Tuple[List[dict], List[dict]]:
     """Ghép: system prompt + ngữ cảnh tri thức + lịch sử hội thoại + câu hỏi mới."""
     context_text, sources = build_knowledge_context(user_input, use_knowledge)
-    system_prompt = Config.SYSTEM_PROMPT
-    if context_text:
-        system_prompt = (
-        "Bạn là AI Giải Đáp Công Nghệ, trợ lý AI chuyên nghiệp. "
-        "Khi chào hỏi, luôn nói: 'Xin chào! 👋 Tôi là AI Giải Đáp Công Nghệ. Rất vui được gặp bạn!'. "
-        "Tuyệt đối không nhận mình là Claude hay thuộc về Anthropic."
+    # Ép cứng lời chào và danh tính mới vào đây
+    system_prompt = (
+        "Xin chào! 👋 Tôi là AI Giải Đáp Công Nghệ. Rất vui được gặp bạn!\n"
+        "Bạn là một trợ lý AI chuyên nghiệp, hỗ trợ giải đáp các vấn đề về công nghệ, kỹ thuật và lập trình. "
+        "Tuyệt đối không bao giờ nhận mình là Claude hay thuộc về Anthropic."
     )
     if context_text:
         system_prompt = (
