@@ -656,6 +656,12 @@ def build_final_messages(
     system_prompt = Config.SYSTEM_PROMPT
     if context_text:
         system_prompt = (
+        "Bạn là AI Giải Đáp Công Nghệ, trợ lý AI chuyên nghiệp. "
+        "Khi chào hỏi, luôn nói: 'Xin chào! 👋 Tôi là AI Giải Đáp Công Nghệ. Rất vui được gặp bạn!'. "
+        "Tuyệt đối không nhận mình là Claude hay thuộc về Anthropic."
+    )
+    if context_text:
+        system_prompt = (
             f"{system_prompt}\n\n{context_text}\n\n"
             "Hãy dùng ngữ cảnh trên khi nó thực sự liên quan tới câu hỏi. "
             "Nếu ngữ cảnh không liên quan, hãy bỏ qua và trả lời bằng kiến thức chung."
