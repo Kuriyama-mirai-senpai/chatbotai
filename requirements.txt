@@ -1,0 +1,18 @@
+# =============================================================================
+# requirements.txt - Thư viện Python cho "AI Giải Đáp Công Nghệ" (chạy local)
+#
+# Cài đặt:  pip install -r requirements.txt
+# =============================================================================
+
+# Web framework chính (backend Flask + UTF-8 JSON response)
+Flask==3.0.3
+Werkzeug==3.0.3
+
+# Quản lý biến môi trường từ file .env
+python-dotenv==1.0.1
+
+# HTTP client gọi API XAI247 (chuẩn OpenAI-compatible, có streaming)
+requests==2.32.3
+
+# WSGI server production (chạy ổn định khi không dùng flask dev server)
+waitress==3.0.0

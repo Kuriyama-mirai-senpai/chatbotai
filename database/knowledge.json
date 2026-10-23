@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "name": "Knowledge Base nội bộ cho AI Giải Đáp Công Nghệ",
+    "version": "1.0.0",
+    "language": "vi",
+    "updated": "2026-01-01",
+    "description": "Dữ liệu tri thức bổ sung giúp chatbot trả lời chuyên sâu, đúng với ngữ cảnh nội bộ. Mỗi mục gồm: id, title, tags, content (bắt buộc) và source, priority (tùy chọn).",
+    "schema": {
+      "id": "mã định danh duy nhất (string)",
+      "title": "tiêu đề mục tri thức",
+      "tags": "mảng từ khóa dùng để tra cứu",
+      "content": "nội dung chi tiết (hỗ trợ Markdown)",
+      "source": "nguồn tham chiếu (tùy chọn)",
+      "priority": "độ ưu tiên 1-10, càng cao càng được ưu tiên (tùy chọn)"
+    }
+  },
+  "documents": [
+    {
+      "id": "kb-001",
+      "title": "Giới thiệu về hệ thống AI Giải Đáp Công Nghệ",
+      "tags": [
+        "xai247",
+        "chatbot",
+        "giới thiệu",
+        "tổng quan",
+        "api"
+      ],
+      "priority": 10,
+      "source": "Tài liệu nội bộ - Kiến trúc hệ thống",
+      "content": "**AI Giải Đáp Công Nghệ** là ứng dụng web chat chạy cục bộ (local), gồm 3 lớp chính:\n\n1. **Frontend**: HTML5 + TailwindCSS (CDN) + Vanilla JavaScript. Giao diện Dark Glassmorphism, hỗ trợ render Markdown bằng marked.js, tô sáng cú pháp bằng highlight.js và render công thức bằng KaTeX.\n2. **Backend**: Python Flask. Cung cấp REST API: `/api/chat` (streaming SSE), `/api/sessions` (GET/POST/DELETE), `/api/sessions/<id>` (GET/PATCH/DELETE), `/api/sessions/<id>/messages`, `/api/knowledge` và `/api/health`.\n3. **Dữ liệu**: SQLite lưu lịch sử hội thoại tại `database/chat_history.db` (bảng `sessions` và `messages`) và Knowledge Base tại `database/knowledge.json`.\n\nBackend gọi API theo chuẩn **OpenAI-compatible** với endpoint `POST {BASE_URL}/chat/completions`, hỗ trợ `stream: true` để trả chữ theo thời gian thực."
+    },
+    {
+      "id": "kb-002",
+      "title": "Cấu hình kết nối API XAI247 Claude",
+      "tags": [
+        "api",
+        "cấu hình",
+        "env",
+        "base_url",
+        "api_key",
+        "model",
+        "claude"
+      ],
+      "priority": 10,
+      "source": "Hướng dẫn vận hành",
+      "content": "Cấu hình được lưu trong file `.env` ở thư mục gốc dự án:\n\n```env\nBASE_URL=\"https://xai247.xyz/v1\"\nAPI_KEY=\"<API_KEY_cua_ban>\"\nMODEL_NAME=\"claude-opus-5.5\"\nTEMPERATURE=0.7\nMAX_TOKENS=4096\n```\n\n- `BASE_URL`: gốc API, backend sẽ nối thêm `/chat/completions` và `/models`.\n- `API_KEY`: khóa bí mật do XAI247 cấp. Không commit file `.env` lên Git.\n- `MODEL_NAME`: có thể đổi sang `claude-sonnet-5` nếu muốn phản hồi nhanh và tiết kiệm hơn.\n\nSau khi sửa `.env`, **phải khởi động lại Flask** thì cấu hình mới có hiệu lực."
+    },
+    {
+      "id": "kb-003",
+      "title": "Xử lý lỗi thường gặp khi kết nối API",
+      "tags": [
+        "lỗi",
+        "troubleshooting",
+        "401",
+        "429",
+        "timeout",
+        "mất mạng",
+        "api key"
+      ],
+      "priority": 8,
+      "source": "Sổ tay vận hành",
+      "content": "Bảng tra lỗi nhanh:\n\n| Mã / Tình huống | Nguyên nhân | Cách xử lý |\n| --- | --- | --- |\n| `401 Unauthorized` | API Key sai hoặc chưa điền | Kiểm tra `API_KEY` trong `.env`, khởi động lại Flask |\n| `403 Forbidden` | Key không có quyền dùng model | Đổi `MODEL_NAME` sang model thuộc gói được cấp |\n| `404 Not Found` | Sai `BASE_URL` | Đảm bảo `BASE_URL` kết thúc bằng `/v1` |\n| `429 Too Many Requests` | Vượt hạn mức tốc độ / token | Chờ vài giây rồi thử lại, giảm `MAX_TOKENS` |\n| `Timeout` hoặc mất mạng | Không kết nối được máy chủ | Kiểm tra Internet, tăng `REQUEST_TIMEOUT` |\n| Trả về rỗng | Model bị chặn nội dung | Diễn đạt lại câu hỏi |\n\nỨng dụng luôn hiển thị thông báo lỗi thân thiện bằng tiếng Việt thay vì làm treo trang."
+    },
+    {
+      "id": "kb-004",
+      "title": "Cơ chế tra cứu Knowledge Base (RAG nội bộ)",
+      "tags": [
+        "knowledge",
+        "rag",
+        "tra cứu",
+        "tri thức",
+        "token hóa"
+      ],
+      "priority": 9,
+      "source": "Tài liệu kỹ thuật",
+      "content": "Quy trình tra cứu tri thức của backend:\n\n1. **Chuẩn hóa** câu hỏi người dùng: thường hóa chữ, bỏ dấu câu, tách thành các token (có hỗ trợ tiếng Việt bằng cách so khớp cả chuỗi có dấu và không dấu).\n2. **Chấm điểm** mỗi tài liệu theo trọng số: khớp `title` (x4), khớp `tags` (x3), khớp `content` (x1), cộng thêm hệ số `priority`.\n3. **Chọn top-K** tài liệu (mặc định `KNOWLEDGE_TOP_K=4`) có điểm cao nhất và khác 0.\n4. **Ghép ngữ cảnh** vào prompt theo dạng: `[Tài liệu 1] Tiêu đề ... Nội dung ...`, giới hạn bởi `KNOWLEDGE_MAX_CHARS`.\n\nCó thể tắt hoàn toàn bằng `KNOWLEDGE_ENABLED=false` trong `.env`. API kiểm tra nhanh: `GET /api/knowledge?q=từ_khóa`."
+    },
+    {
+      "id": "kb-005",
+      "title": "Bảo mật khi triển khai cục bộ",
+      "tags": [
+        "bảo mật",
+        "local",
+        "api key",
+        "an toàn",
+        "gitignore"
+      ],
+      "priority": 7,
+      "source": "Chính sách bảo mật",
+      "content": "Nguyên tắc bảo mật cho bản chạy local:\n\n- File `.env` chứa API Key **không được** đưa lên Git. Hãy thêm `.env` vào `.gitignore`.\n- Server mặc định bind `127.0.0.1` (chỉ máy cục bộ truy cập được). Nếu đổi sang `0.0.0.0`, cần thêm lớp xác thực.\n- Backend **không bao giờ** trả `API_KEY` về cho frontend. Mọi lời gọi tới XAI247 đều thực hiện ở phía server.\n- Toàn bộ truy vấn SQLite dùng **parameterized query** (`?`) để chống SQL Injection.\n- Đầu vào người dùng bị giới hạn bởi `MAX_INPUT_CHARS` để tránh lạm dụng token."
+    },
+    {
+      "id": "kb-006",
+      "title": "Khắc phục lỗi 401 Unauthorized do API Key bị bọc dấu ngoặc",
+      "tags": [
+        "401",
+        "unauthorized",
+        "api key",
+        "bearer",
+        "lỗi xác thực",
+        "header"
+      ],
+      "priority": 10,
+      "source": "Sổ tay vận hành",
+      "content": "**Triệu chứng**: mọi câu hỏi đều trả về `HTTP 401 Unauthorized` dù API Key đã điền.\n\n**Nguyên nhân phổ biến nhất**: giá trị `API_KEY` bị bọc thêm dấu ngoặc vuông hoặc dấu nhỏ hơn/lớn hơn (thường do sao chép từ mẫu tài liệu). Backend khi đó gửi header sai:\n\n```http\nAuthorization: Bearer [sk-xai-xxxxxxxx]\n```\n\nMáy chủ từ chối token vì chứa ký tự `[` và `]`.\n\n**Cách khắc phục**:\n\n```env\n# SAI\nAPI_KEY=\"[sk-xai-xxxxxxxx]\"\n\n# ĐÚNG\nAPI_KEY=\"sk-xai-xxxxxxxx\"\n```\n\nBackend đã có cơ chế **self-healing**: hàm `_clean_value()` trong `config.py` tự động cắt bỏ dấu `[]`, `<>`, dấu nháy và tiền tố `Bearer`. Mọi header xác thực đều đi qua `Config.auth_header()` để bảo đảm luôn đúng dạng `Bearer <token>`.\n\n**Kiểm tra nhanh**: gọi `GET {BASE_URL}/models` — trả về 200 là xác thực thành công."
+    },
+    {
+      "id": "kb-007",
+      "title": "Chạy ứng dụng bằng waitress (WSGI) thay vì Flask dev server",
+      "tags": [
+        "waitress",
+        "wsgi",
+        "production",
+        "triển khai",
+        "server"
+      ],
+      "priority": 6,
+      "source": "Hướng dẫn vận hành",
+      "content": "Mặc định `python app.py` chạy **Flask development server** (tiện khi lập trình, nhưng có cảnh báo không dùng cho production).\n\nĐể chạy ổn định hơn bằng **waitress** (WSGI server đa luồng), sửa `.env`:\n\n```env\nFLASK_DEBUG=false\nUSE_WAITRESS=true\n```\n\nSau đó chạy lại `python app.py`. Ứng dụng sẽ gọi `waitress.serve(app, host, port, threads=8, channel_timeout=300)`.\n\nNếu chưa cài `waitress`, backend tự động quay về Flask dev server (self-healing) và ghi cảnh báo vào log — ứng dụng **không bị crash**.\n\nCài đặt đầy đủ: `pip install -r requirements.txt`."
+    },
+    {
+      "id": "kb-008",
+      "title": "Bảo vệ mã hóa UTF-8 cho tiếng Việt",
+      "tags": [
+        "utf-8",
+        "font",
+        "tiếng việt",
+        "encoding",
+        "lỗi phông"
+      ],
+      "priority": 8,
+      "source": "Tài liệu kỹ thuật",
+      "content": "Để **tuyệt đối không bị lỗi phông tiếng Việt**, dự án áp dụng đồng thời nhiều lớp bảo vệ.\n\n**Backend**:\n- Mọi file Python mở đầu bằng `# -*- coding: utf-8 -*-`.\n- `config.py` ép `stdout`/`stderr` sang UTF-8 để log tiếng Việt không bị chữ ô vuông trên Windows.\n- `app.json.ensure_ascii = False` để JSON trả về tiếng Việt nguyên bản, không bị mã hóa thành `\\uXXXX`.\n- Hook `@app.after_request` ép `Content-Type` của JSON/text thành `...; charset=utf-8` và **gộp charset trùng lặp**.\n- Gọi API với header `Content-Type: application/json; charset=utf-8`; giải mã luồng SSE bằng `decode(\"utf-8\", errors=\"replace\")`.\n\n**Frontend**:\n- `<meta charset=\"UTF-8\">` ngay đầu `<head>`.\n- Đọc luồng SSE bằng `new TextDecoder(\"utf-8\")` để ký tự nhiều byte không bị cắt giữa 2 chunk.\n- Font hỗ trợ tiếng Việt đầy đủ (`Be Vietnam Pro`)."
+    }
+  ]
+}
