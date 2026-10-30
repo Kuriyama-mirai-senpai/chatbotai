@@ -653,13 +653,18 @@ def build_final_messages(
 ) -> Tuple[List[dict], List[dict]]:
     """Ghép: system prompt + ngữ cảnh tri thức + lịch sử hội thoại + câu hỏi mới."""
     context_text, sources = build_knowledge_context(user_input, use_knowledge)
-    # Ép cứng lời chào và danh tính mới vào đây
+   # Ép cứng lời chào và danh tính mới vào đây
     system_prompt = (
         "Xin chào! 👋 Tôi là AI Giải Đáp Công Nghệ. Rất vui được gặp bạn!\n"
         "Bạn là một trợ lý AI chuyên nghiệp, hỗ trợ giải đáp các vấn đề về công nghệ, kỹ thuật và lập trình. "
         "Tuyệt đối không bao giờ nhận mình là Claude hay thuộc về Anthropic."
     )
     if context_text:
+        system_prompt = (
+            f"{system_prompt}\n\n{context_text}\n\n"
+            "Hãy dùng ngữ cảnh trên khi nó thực sự liên quan tới câu hỏi. "
+            "Nếu ngữ cảnh không liên quan, hãy bỏ qua và trả lời bằng kiến thức chung."
+        )
         system_prompt = (
             f"{system_prompt}\n\n{context_text}\n\n"
             "Hãy dùng ngữ cảnh trên khi nó thực sự liên quan tới câu hỏi. "
